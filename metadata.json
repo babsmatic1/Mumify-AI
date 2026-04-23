@@ -1,0 +1,5 @@
+{
+  "name": "Mumify AI",
+  "description": "Budget-smart meal planner for busy mothers and pregnant women. Scan your fridge, plan your week, and get tailored nutritional advice.",
+  "requestFramePermissions": ["camera", "microphone"]
+}

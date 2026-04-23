@@ -1,0 +1,80 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user preferences and pregnancy status.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "isPregnant": { "type": "boolean" },
+        "budgetLevel": { "type": "string", "enum": ["low", "medium", "high"] },
+        "budget": {
+          "type": "object",
+          "properties": {
+            "amount": { "type": "number" },
+            "period": { "type": "string", "enum": ["weekly", "monthly"] }
+          }
+        },
+        "onboardingComplete": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "isPregnant", "onboardingComplete"]
+    },
+    "InventoryItem": {
+      "title": "Inventory Item",
+      "description": "An item found in the user's fridge or pantry.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "quantity": { "type": "string" },
+        "expiryDate": { "type": "string", "format": "date" },
+        "addedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name"]
+    },
+    "MealPlan": {
+      "title": "Meal Plan",
+      "description": "A generated meal plan for a specific duration.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "duration": { "type": "string", "enum": ["week", "month", "trimester"] },
+        "plan": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "duration", "plan"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "A grocery expense.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date-time" },
+        "amount": { "type": "number" },
+        "description": { "type": "string" }
+      },
+      "required": ["date", "amount", "description"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile information."
+    },
+    "/users/{userId}/inventory/{itemId}": {
+      "schema": "InventoryItem",
+      "description": "User's food inventory."
+    },
+    "/users/{userId}/mealPlans/{planId}": {
+      "schema": "MealPlan",
+      "description": "Generated meal plans for the user."
+    },
+    "/users/{userId}/expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "User's grocery expenses."
+    }
+  }
+}

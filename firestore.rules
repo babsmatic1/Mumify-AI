@@ -1,0 +1,110 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - displayName: string
+    //   - isPregnant: boolean (required)
+    //   - budgetLevel: string (low, medium, high)
+    //   - budget: map (amount: number, period: string)
+    //   - onboardingComplete: boolean (required)
+    //   - createdAt: timestamp
+    //
+    // Collection: users/{userId}/inventory
+    // Document ID: {itemId}
+    // Fields:
+    //   - name: string (required)
+    //   - category: string
+    //   - quantity: string
+    //   - expiryDate: string
+    //   - addedAt: timestamp
+    //
+    // Collection: users/{userId}/mealPlans
+    // Document ID: {planId}
+    // Fields:
+    //   - uid: string (required)
+    //   - duration: string (week, month, trimester)
+    //   - plan: string (required)
+    //   - createdAt: timestamp
+    //
+    // Collection: users/{userId}/expenses
+    // Document ID: {expenseId}
+    // Fields:
+    //   - date: string (required)
+    //   - amount: number (required)
+    //   - description: string (required)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'isPregnant', 'onboardingComplete']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.isPregnant is bool &&
+             data.onboardingComplete is bool &&
+             (!('budget' in data) || (data.budget is map && data.budget.amount is number && data.budget.period in ['weekly', 'monthly']));
+    }
+
+    function isValidInventory(data) {
+      return data.keys().hasAll(['name']) &&
+             data.name is string && data.name.size() < 100;
+    }
+
+    function isValidMealPlan(data) {
+      return data.keys().hasAll(['uid', 'duration', 'plan']) &&
+             data.uid == request.auth.uid &&
+             data.duration in ['week', 'month', 'trimester'] &&
+             data.plan is string;
+    }
+
+    function isValidExpense(data) {
+      return data.keys().hasAll(['date', 'amount', 'description']) &&
+             data.date is string &&
+             data.amount is number &&
+             data.description is string && data.description.size() < 200;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+
+      match /inventory/{itemId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidInventory(request.resource.data);
+        allow update: if isOwner(userId) && isValidInventory(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /mealPlans/{planId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidMealPlan(request.resource.data);
+        allow update: if isOwner(userId) && isValidMealPlan(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /expenses/{expenseId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidExpense(request.resource.data);
+        allow update: if isOwner(userId) && isValidExpense(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}
