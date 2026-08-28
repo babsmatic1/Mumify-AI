@@ -317,8 +317,9 @@ export default function App() {
           addedAt: serverTimestamp()
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Scan error:", err);
+      alert(err?.message || "Failed to scan items. Please try again.");
     } finally {
       setScanning(false);
     }
@@ -353,8 +354,9 @@ export default function App() {
       const plan = await generateMealPlan(itemNames, duration, isPregnant, isNursing, nursingChildAge);
       setMealPlan(plan);
       setActiveTab('planner');
-    } catch (err) {
+    } catch (err: any) {
       console.error("Plan generation error:", err);
+      alert(err?.message || "Failed to generate meal plan. Please try again.");
     } finally {
       setGeneratingPlan(false);
     }
@@ -367,8 +369,9 @@ export default function App() {
     try {
       const recipe = await extractRecipeFromUrl(recipeUrl);
       setExtractedRecipe(recipe);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Recipe extraction error:", err);
+      alert(err?.message || "Failed to extract recipe. Please try again.");
     } finally {
       setExtractingRecipe(false);
     }

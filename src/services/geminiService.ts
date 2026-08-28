@@ -1,6 +1,19 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let ai: GoogleGenAI | null = null;
+
+function getClient(): GoogleGenAI {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "Gemini API key is not configured. Add VITE_GEMINI_API_KEY to your .env file (get one at https://aistudio.google.com/apikey)."
+    );
+  }
+  if (!ai) {
+    ai = new GoogleGenAI({ apiKey });
+  }
+  return ai;
+}
 
 export interface ScannedItem {
   name: string;
@@ -9,7 +22,7 @@ export interface ScannedItem {
 }
 
 export async function scanInventory(base64Image: string): Promise<ScannedItem[]> {
-  const response = await ai.models.generateContent({
+  const response = await getClient().models.generateContent({
     model: "gemini-3-flash-preview",
     contents: [
       {
@@ -80,7 +93,7 @@ export async function generateMealPlan(
     Ensure you always include 'plan', 'dishes', and 'seasonalTips'.
   `;
 
-  const response = await ai.models.generateContent({
+  const response = await getClient().models.generateContent({
     model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
@@ -124,7 +137,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     Return the response in JSON format with fields: 'title', 'ingredients' (array of strings), 'instructions' (markdown string), and 'nutritionalValue' (string).
   `;
 
-  const response = await ai.models.generateContent({
+  const response = await getClient().models.generateContent({
     model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
@@ -157,7 +170,7 @@ export async function chatWithGemini(
   imageBase64?: string
 ): Promise<string> {
   try {
-    const chat = ai.chats.create({
+    const chat = getClient().chats.create({
       model: "gemini-3-flash-preview",
       history: history as any,
       config: {
@@ -198,7 +211,7 @@ ${userContext.isNursing ? 'When giving advice for the nursing child, explicitly 
 
 export async function generateSpeech(text: string): Promise<string> {
   try {
-    const response = await ai.models.generateContent({
+    const response = await getClient().models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text: `Say clearly: ${text}` }] }],
       config: {
